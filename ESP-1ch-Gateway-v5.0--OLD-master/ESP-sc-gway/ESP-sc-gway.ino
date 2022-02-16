@@ -52,6 +52,12 @@
 #include <pins_arduino.h>
 #include <gBase64.h>							// https://github.com/adamvr/arduino-base64 (changed the name)
 
+//#include <WiFi.h>
+//#include <PubSubClient.h>
+//const char* mqtt_server = "192.168.1.57";
+//WiFiClient espClient;
+//PubSubClient client(espClient);
+
 // Local include files
 #include "loraModem.h"
 #include "loraFiles.h"
@@ -87,6 +93,11 @@ extern "C" {
 #include <ESP32httpUpdate.h>					// Not yet available
 #include <ArduinoOTA.h>
 #endif//OTA
+
+#include <PubSubClient.h>
+const char* mqtt_server = "192.168.1.57";
+WiFiClient espClient;
+PubSubClient client(espClient);
 
 // ----------- Generic ESP8266 stuff --------------
 #else
@@ -997,6 +1008,9 @@ void setup() {
 	Serial.begin(_BAUDRATE);						// As fast as possible for bus
 	delay(100);	
 
+  client.setServer(mqtt_server, 1883);
+  //client.setCallback(callback);
+
 #if _GPS==1
 	// Pins are define in LoRaModem.h together with other pins
 	Serial1.begin(9600, SERIAL_8N1, GPS_TX, GPS_RX);// PIN 12-TX 15-RX
@@ -1472,6 +1486,32 @@ void loop ()
 		ntptimer = nowSeconds;
 	}
 #endif
+
+
+  if (!client.connected()) {
+    reconnect();
+  }
+  client.loop();
 	
 
 }//loop
+
+
+void reconnect() {
+  // Loop until we're reconnected
+  while (!client.connected()) {
+    //Serial.print("Attempting MQTT connection...");
+    // Attempt to connect
+    if (client.connect("ESP8266Client")) {
+      //Serial.println("connected");
+      // Subscribe
+      //client.subscribe("esp32/output");
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" try again in 5 seconds");
+      // Wait 5 seconds before retrying
+      delay(5000);
+    }
+  }
+}

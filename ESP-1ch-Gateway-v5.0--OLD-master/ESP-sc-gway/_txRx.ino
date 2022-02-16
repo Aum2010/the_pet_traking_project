@@ -312,6 +312,13 @@ int buildPacket(uint32_t tmst, uint8_t *buff_up, struct LoraUp LoraUp, bool inte
 								DevAddr, 
 								decodes[index].appKey, 
 								0);
+        
+
+    char temp_DevAddr[(statr[0].datal)];
+    memcpy(temp_DevAddr,&(statr[0].data[0]),statr[0].datal);
+//    Serial.println(temp_DevAddr);
+    client.publish("esp32/temperature", temp_DevAddr );
+    
 	}
 #endif //_LOCALSERVER
 	statr[0].tmst = now();

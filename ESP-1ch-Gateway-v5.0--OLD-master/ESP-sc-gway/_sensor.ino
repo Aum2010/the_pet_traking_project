@@ -620,6 +620,11 @@ uint8_t encodePacket(uint8_t *Data, uint8_t DataLength, uint16_t FrameCount, uin
 	}
 #endif
 
+    //char temp_DevAddr[4];
+    //memcpy(temp_DevAddr,DevAddr,4);
+    //Serial.println(statr[0].data);
+    //client.publish("esp32/temperature", statr[0].data );
+
 	//unsigned char AppSKey[16] = _APPSKEY ;	// see ESP-sc-gway.h
 	uint8_t i, j;
 	uint8_t Block_A[16];
