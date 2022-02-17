@@ -73,12 +73,24 @@ void os_getArtEui (u1_t* buf) { }
 void os_getDevEui (u1_t* buf) { }
 void os_getDevKey (u1_t* buf) { }
 
-static uint8_t mydata[] = "Hello, world!";
+//static uint8_t mydata[] = "Hello, world!";
+static uint8_t mydata[8];
+float lat = 14.0366751;
+float lon = 100.7254732;
+
+typedef struct packet {
+  float lat;
+  float lon;
+}PACKET_T;
+
+PACKET_T packet_sent ;
+
+
 static osjob_t sendjob;
 
 // Schedule TX every this many seconds (might become longer due to duty
 // cycle limitations).
-const unsigned TX_INTERVAL = 60;
+const unsigned TX_INTERVAL = 10;
 
 // Pin mapping
 // Adapted for Feather M0 per p.10 of [feather]
@@ -193,12 +205,17 @@ void onEvent (ev_t ev) {
 }
 
 void do_send(osjob_t* j){
+
+  packet_sent.lat = 1.1;
+  packet_sent.lon = 2.2;
+  
+  
     // Check if there is not a current TX/RX job running
     if (LMIC.opmode & OP_TXRXPEND) {
         Serial.println(F("OP_TXRXPEND, not sending"));
     } else {
         // Prepare upstream data transmission at the next possible time.
-        LMIC_setTxData2(1, mydata, sizeof(mydata)-1, 0);
+        LMIC_setTxData2(1,(unsigned char *)&packet_sent , sizeof(PACKET_T), 0);
         Serial.println(F("Packet queued"));
     }
     // Next TX is scheduled after TX_COMPLETE event.

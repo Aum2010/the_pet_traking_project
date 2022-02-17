@@ -316,8 +316,34 @@ int buildPacket(uint32_t tmst, uint8_t *buff_up, struct LoraUp LoraUp, bool inte
 
     char temp_DevAddr[(statr[0].datal)];
     memcpy(temp_DevAddr,&(statr[0].data[0]),statr[0].datal);
-//    Serial.println(temp_DevAddr);
-    client.publish("esp32/temperature", temp_DevAddr );
+    for( int i = 0 ; i <= statr[0].datal ; i++) 
+    {
+        Serial.print(temp_DevAddr[i],HEX);
+    }
+
+    float lat;
+    
+    union u_tag {
+        byte b[8];
+        float fval[2];
+    } u;
+
+    u.b[0] = temp_DevAddr[0];
+    u.b[1] = temp_DevAddr[1];
+    u.b[2] = temp_DevAddr[2];
+    u.b[3] = temp_DevAddr[3];
+    u.b[4] = temp_DevAddr[4];
+    u.b[5] = temp_DevAddr[5];
+    u.b[6] = temp_DevAddr[6];
+    u.b[7] = temp_DevAddr[7];
+
+//    lat = u.fval[0];
+
+    Serial.println();
+    Serial.println(u.fval[0]);
+    Serial.println(u.fval[1]);
+    
+    //client.publish("esp32/temperature", u.fval[0] );
     
 	}
 #endif //_LOCALSERVER

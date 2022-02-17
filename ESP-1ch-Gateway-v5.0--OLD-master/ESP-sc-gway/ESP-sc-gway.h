@@ -52,7 +52,7 @@
 // This parameters contains the default value of SF, the actual version can be set with
 // the webserver and it will be stored in SPIFF
 // NOTE: The frequency is set in the loraModem.h file and is default 868.100000 MHz.
-#define _SPREADING SF10 //SF9
+#define _SPREADING SF12 //SF9
 
 // Channel Activity Detection
 // This function will scan for valid LoRa headers and determine the Spreading 
