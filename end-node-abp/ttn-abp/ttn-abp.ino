@@ -38,6 +38,31 @@
 #include <hal/hal.h>
 #include <SPI.h>
 
+
+#define GPS_RX_PIN                  34
+#define GPS_TX_PIN                  12
+#define BUTTON_PIN                  38
+#define BUTTON_PIN_MASK             GPIO_SEL_38
+#define I2C_SDA                     21
+#define I2C_SCL                     22
+#define PMU_IRQ                     35
+
+#define RADIO_SCLK_PIN               5
+#define RADIO_MISO_PIN              19
+#define RADIO_MOSI_PIN              27
+#define RADIO_CS_PIN                18
+#define RADIO_DI0_PIN               26
+#define RADIO_RST_PIN               23
+#define RADIO_DIO1_PIN              33
+#define RADIO_BUSY_PIN              32
+
+#define BOARD_LED                   4
+#define LED_ON                      LOW
+#define LED_OFF                     HIGH
+
+#define GPS_BAUD_RATE               9600
+#define HAS_GPS
+#define HAS_DISPLAY                 //Optional, bring your own board, no OLED !!
 //
 // For normal use, we require that you edit the sketch to replace FILLMEIN
 // with values assigned by the TTN console. However, for regression tests,
@@ -105,11 +130,19 @@ const lmic_pinmap lmic_pins = {
 };
 */
 
+//const lmic_pinmap lmic_pins = {
+//  .nss = 16,
+//  .rxtx = LMIC_UNUSED_PIN,
+//  .rst = 5,
+//  .dio = {26, 33, 32},
+//};
+
+
 const lmic_pinmap lmic_pins = {
-  .nss = 16,
+  .nss = RADIO_CS_PIN,
   .rxtx = LMIC_UNUSED_PIN,
-  .rst = 5,
-  .dio = {26, 33, 32},
+  .rst = RADIO_RST_PIN,
+  .dio = {RADIO_DI0_PIN, RADIO_DIO1_PIN, RADIO_BUSY_PIN},
 };
 
 
@@ -223,6 +256,9 @@ void do_send(osjob_t* j){
 
 void setup() {
 //    pinMode(13, OUTPUT);
+
+   SPI.begin(RADIO_SCLK_PIN,RADIO_MISO_PIN,RADIO_MOSI_PIN,RADIO_CS_PIN);
+
     while (!Serial); // wait for Serial to be initialized
     Serial.begin(115200);
     delay(100);     // per sample code on RF_95 test
