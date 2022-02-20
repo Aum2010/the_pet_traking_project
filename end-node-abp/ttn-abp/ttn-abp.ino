@@ -37,6 +37,8 @@
 #include <lmic.h>
 #include <hal/hal.h>
 #include <SPI.h>
+#include <TinyGPS++.h>
+#include <axp20x.h>
 
 
 #define GPS_RX_PIN                  34
@@ -63,6 +65,18 @@
 #define GPS_BAUD_RATE               9600
 #define HAS_GPS
 #define HAS_DISPLAY                 //Optional, bring your own board, no OLED !!
+
+TinyGPSPlus     gps;
+uint32_t        gpsLoopMillis = 0;
+uint32_t        positioningMillis = 0;
+void GpsLoop(void);
+
+AXP20X_Class PMU;
+
+
+char buff[5][256];
+
+
 //
 // For normal use, we require that you edit the sketch to replace FILLMEIN
 // with values assigned by the TTN console. However, for regression tests,
@@ -241,7 +255,7 @@ void do_send(osjob_t* j){
 
   packet_sent.lat = 1.1;
   packet_sent.lon = 2.2;
-  
+
   
     // Check if there is not a current TX/RX job running
     if (LMIC.opmode & OP_TXRXPEND) {
@@ -258,6 +272,9 @@ void setup() {
 //    pinMode(13, OUTPUT);
 
    SPI.begin(RADIO_SCLK_PIN,RADIO_MISO_PIN,RADIO_MOSI_PIN,RADIO_CS_PIN);
+   Serial1.begin(GPS_BAUD_RATE, SERIAL_8N1, GPS_RX_PIN, GPS_TX_PIN);
+   Wire.begin(I2C_SDA, I2C_SCL);
+   initPMU();
 
     while (!Serial); // wait for Serial to be initialized
     Serial.begin(115200);
@@ -374,5 +391,119 @@ void loop() {
     }
 
     os_runloop_once();
+    GpsLoop();
 
+}
+
+void GpsLoop(void)
+{
+    while (Serial1.available()) {
+        int r = Serial1.read();
+        Serial.write(r);
+        gps.encode(r);
+    }
+
+    if (millis() > 5000 && gps.charsProcessed() < 10) {
+        snprintf(buff[0], sizeof(buff[0]), "T-Beam GPS");
+        snprintf(buff[1], sizeof(buff[1]), "No GPS detected");
+        Serial.println("No GPS detected");
+        return;
+    }
+    if (!gps.location.isValid()) {
+        if (millis() - gpsLoopMillis > 1000) {
+            snprintf(buff[0], sizeof(buff[0]), "T-Beam GPS");
+            snprintf(buff[1], sizeof(buff[1]), "Positioning(%u)S", positioningMillis++);
+            gpsLoopMillis = millis();
+        }
+    } else {
+        if (millis() - gpsLoopMillis > 1000) {
+            snprintf(buff[0], sizeof(buff[0]), "UTC:%d:%d:%d", gps.time.hour(), gps.time.minute(), gps.time.second());
+            snprintf(buff[1], sizeof(buff[1]), "LNG:%.4f", gps.location.lng());
+            snprintf(buff[2], sizeof(buff[2]), "LAT:%.4f", gps.location.lat());
+            snprintf(buff[3], sizeof(buff[3]), "satellites:%u", gps.satellites.value());
+
+            Serial.printf("UTC:%d:%d:%d-LNG:%.4f-LAT:%.4f-satellites:%u\n",
+                          gps.time.hour(),
+                          gps.time.minute(),
+                          gps.time.second(),
+                          gps.location.lng(),
+                          gps.location.lat(),
+                          gps.satellites.value());
+
+            Serial.println(PMU.getVbusVoltage()); //<--- No Connect Battery!
+            //Serial.println(PMU.getBattVoltage());
+            
+                          
+            gpsLoopMillis = millis();
+        }
+    }
+}
+
+bool initPMU()
+{
+    if (PMU.begin(Wire, AXP192_SLAVE_ADDRESS) == AXP_FAIL) {
+        return false;
+    }
+    /*
+     * The charging indicator can be turned on or off
+     * * * */
+    // PMU.setChgLEDMode(LED_BLINK_4HZ);
+
+    /*
+    * The default ESP32 power supply has been turned on,
+    * no need to set, please do not set it, if it is turned off,
+    * it will not be able to program
+    *
+    *   PMU.setDCDC3Voltage(3300);
+    *   PMU.setPowerOutPut(AXP192_DCDC3, AXP202_ON);
+    *
+    * * * */
+
+    /*
+     *   Turn off unused power sources to save power
+     * **/
+
+    PMU.setPowerOutPut(AXP192_DCDC1, AXP202_OFF);
+    PMU.setPowerOutPut(AXP192_DCDC2, AXP202_OFF);
+    PMU.setPowerOutPut(AXP192_LDO2, AXP202_OFF);
+    PMU.setPowerOutPut(AXP192_LDO3, AXP202_OFF);
+    PMU.setPowerOutPut(AXP192_EXTEN, AXP202_OFF);
+
+    /*
+     * Set the power of LoRa and GPS module to 3.3V
+     **/
+    PMU.setLDO2Voltage(3300);   //LoRa VDD
+    PMU.setLDO3Voltage(3300);   //GPS  VDD
+    PMU.setDCDC1Voltage(3300);  //3.3V Pin next to 21 and 22 is controlled by DCDC1
+
+    PMU.setPowerOutPut(AXP192_DCDC1, AXP202_ON);
+    PMU.setPowerOutPut(AXP192_LDO2, AXP202_ON);
+    PMU.setPowerOutPut(AXP192_LDO3, AXP202_ON);
+
+    pinMode(PMU_IRQ, INPUT_PULLUP);
+    attachInterrupt(PMU_IRQ, [] {
+        // pmu_irq = true;
+    }, FALLING);
+
+    PMU.adc1Enable(AXP202_VBUS_VOL_ADC1 |
+                   AXP202_VBUS_CUR_ADC1 |
+                   AXP202_BATT_CUR_ADC1 |
+                   AXP202_BATT_VOL_ADC1,
+                   AXP202_ON);
+
+    PMU.enableIRQ(AXP202_VBUS_REMOVED_IRQ |
+                  AXP202_VBUS_CONNECT_IRQ |
+                  AXP202_BATT_REMOVED_IRQ |
+                  AXP202_BATT_CONNECT_IRQ,
+                  AXP202_ON);
+    PMU.clearIRQ();
+
+    return true;
+}
+
+void disablePeripherals()
+{
+    PMU.setPowerOutPut(AXP192_DCDC1, AXP202_OFF);
+    PMU.setPowerOutPut(AXP192_LDO2, AXP202_OFF);
+    PMU.setPowerOutPut(AXP192_LDO3, AXP202_OFF);
 }

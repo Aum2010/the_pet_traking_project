@@ -1488,10 +1488,10 @@ void loop ()
 #endif
 
 
-  if (!client.connected()) {
-    reconnect();
-  }
-  client.loop();
+//  if (!client.connected()) {
+//    reconnect();
+//  }
+//  client.loop();
 	
 
 }//loop

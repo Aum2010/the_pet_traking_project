@@ -94,7 +94,9 @@ int sendPacket(uint8_t *buf, uint8_t length)
 	// {"txpk":{"codr":"4/5","data":"YCkEAgIABQABGmIwYX/kSn4Y","freq":868.1,"ipol":true,"modu":"LORA","powe":14,"rfch":0,"size":18,"tmst":1890991792,"datr":"SF7BW125"}}
 
 	// Used in the protocol of Gateway:
+
   JsonObject root = jsonBuffer.to<JsonObject>();
+  
 	const char * data	= root["txpk"]["data"];			// Downstream Payload
 	uint8_t psize		= root["txpk"]["size"];
 	bool ipol			= root["txpk"]["ipol"];
@@ -342,6 +344,8 @@ int buildPacket(uint32_t tmst, uint8_t *buff_up, struct LoraUp LoraUp, bool inte
     Serial.println();
     Serial.println(u.fval[0]);
     Serial.println(u.fval[1]);
+    Serial.println(statr[0].node);
+    
     
     //client.publish("esp32/temperature", u.fval[0] );
     
