@@ -178,7 +178,9 @@
 #define _TTNPORT 1700						// Standard port for TTN
 //#define _TTNSERVER "router.eu.thethings.network"
 //#define _TTNSERVER "router.as1.thethings.network"
-#define _TTNSERVER "eu1.cloud.thethings.network"
+//#define _TTNSERVER "eu1.cloud.thethings.network"
+#define _TTNSERVER "178.128.104.177"
+
 
 // If you have a second back-end server defined such as Semtech or loriot.io
 // your can define _THINGPORT and _THINGSERVER with your own value.

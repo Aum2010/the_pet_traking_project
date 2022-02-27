@@ -93,16 +93,19 @@ char buff[5][256];
 
 // LoRaWAN NwkSKey, network session key
 // This should be in big-endian (aka msb).
-static const PROGMEM u1_t NWKSKEY[16] = { 0xD1, 0x02, 0x6C, 0xA8, 0xFB, 0x77, 0x09, 0x4C, 0xBE, 0xC0, 0xFF, 0x07, 0xDA, 0x2E, 0x18, 0xEF };
+//static const PROGMEM u1_t NWKSKEY[16] = { 0xef, 0x18, 0x2e, 0xda, 0x07, 0xff, 0xc0, 0xbe, 0x4c, 0x09, 0x77, 0xfb, 0xa8, 0x6c, 0x02, 0xd1 };
+static const PROGMEM u1_t NWKSKEY[16] = { 0xd1, 0x02, 0x6c, 0xa8, 0xfb, 0x77, 0x09, 0x4c, 0xbe, 0xc0, 0xff, 0x07, 0xda, 0x2e, 0x18, 0xef };
 
 // LoRaWAN AppSKey, application session key
 // This should also be in big-endian (aka msb).
-static const u1_t PROGMEM APPSKEY[16] = { 0xFA, 0x53, 0xE5, 0xE4, 0x95, 0x4E, 0xEB, 0xA2, 0x4A, 0x87, 0x12, 0x2F, 0xE8, 0x35, 0x93, 0xCD };
+//static const u1_t PROGMEM APPSKEY[16] = { 0xcd, 0x93, 0x35, 0xe8, 0x2f, 0x12, 0x87, 0x4a, 0xa2, 0xeb, 0x4e, 0x95, 0xe4, 0xe5, 0x53, 0xfa };
+static const u1_t PROGMEM APPSKEY[16] = { 0xfa, 0x53, 0xe5, 0xe4, 0x95, 0x4e, 0xeb, 0xa2, 0x4a, 0x87, 0x12, 0x2f, 0xe8, 0x35, 0x93, 0xcd };
 
 // LoRaWAN end-device address (DevAddr)
 // See http://thethingsnetwork.org/wiki/AddressSpace
 // The library converts the address to network byte order as needed, so this should be in big-endian (aka msb) too.
-static const u4_t DEVADDR = 0x260B9D62 ; // <-- Change this address for every node!
+//static const u4_t DEVADDR = 0x260B9D62 ; // <-- Change this address for every node!
+static const u4_t DEVADDR = 0x629D0B26 ;
 
 // These callbacks are only used in over-the-air activation, so they are
 // left empty here (we cannot leave them out completely unless
@@ -129,7 +132,7 @@ static osjob_t sendjob;
 
 // Schedule TX every this many seconds (might become longer due to duty
 // cycle limitations).
-const unsigned TX_INTERVAL = 10;
+const unsigned TX_INTERVAL = 5;
 
 // Pin mapping
 // Adapted for Feather M0 per p.10 of [feather]
@@ -341,8 +344,8 @@ void setup() {
     #elif defined(CFG_as923)
     // Set up the channels used in your country. Only two are defined by default,
     // and they cannot be changed.  Use BAND_CENTI to indicate 1% duty cycle.
-    // LMIC_setupChannel(0, 923200000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);
-    // LMIC_setupChannel(1, 923400000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);
+    LMIC_setupChannel(0, 923200000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);
+    LMIC_setupChannel(1, 923400000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);
 
     // ... extra definitions for channels 2..n here
     #elif defined(CFG_kr920)
