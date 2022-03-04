@@ -108,6 +108,8 @@ void setup() {
   Serial.println("Rx: invertIQ enable");
   Serial.println();
 
+  LoRa.setSpreadingFactor(8);
+
   LoRa.onReceive(onReceive);
   LoRa.onTxDone(onTxDone);
   LoRa_rxMode();

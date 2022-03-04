@@ -30,6 +30,12 @@
 #include <IOXhop_FirebaseESP32.h>
 #include "CRC8.h"
 #include "CRC.h"
+#include "time.h"
+
+
+const char* ntpServer = "pool.ntp.org";
+const long  gmtOffset_sec = 7 * 3600;
+const int   daylightOffset_sec = 7 * 3600;
 
 
 
@@ -69,13 +75,19 @@ const long frequency = 923E6;  // LoRa Frequency
 CRC8 crc;
 
 union u_tag {
-  uint8_t b[12];
-  float fval[3];
+  uint8_t b[16];
+  double fval[2];
 } u;
+
+union u_batt {
+  uint8_t b[4];
+  float fval;
+} b;
 
 typedef struct packet {
   uint8_t id;
   u_tag t;
+  u_batt b;
   uint8_t crc8 ;
 } __attribute__ ((packed)) PACKET_T;
 
@@ -109,6 +121,8 @@ void setup() {
   Serial.println();
   Serial.print("connected: ");
   Serial.println(WiFi.localIP());
+
+  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 
   Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
 
@@ -154,13 +168,14 @@ void loop() {
     Serial.print("longtitude: ");
     Serial.println(packet_sent.t.fval[1]);
     Serial.print("battery: ");
-    Serial.println(packet_sent.t.fval[2]);
+    Serial.println(packet_sent.b.fval);
 
     if ( crc8((uint8_t *)&packet_sent, sizeof( PACKET_T ) - 1 , 0x07) == packet_sent.crc8 )
     {
       root["latitude"] = packet_sent.t.fval[0];
       root["longtitude"] = packet_sent.t.fval[1];
-      root["battery"] = packet_sent.t.fval[2];
+      root["battery"] = packet_sent.b.fval;
+      root["timestamp"] = getTime();
 
       Firebase.push("Pet-Traking/01", root);
     }
@@ -236,4 +251,15 @@ boolean runEvery(unsigned long interval)
     return true;
   }
   return false;
+}
+
+unsigned long getTime() {
+  time_t now;
+  struct tm timeinfo;
+  if (!getLocalTime(&timeinfo)) {
+    //Serial.println("Failed to obtain time");
+    return(0);
+  }
+  time(&now);
+  return now;
 }
