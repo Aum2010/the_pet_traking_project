@@ -37,7 +37,7 @@ const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset_sec = 7 * 3600;
 const int   daylightOffset_sec = 7 * 3600;
 
-
+//#define ENABLE_FIREBASE_WIFI  
 
 #define FIREBASE_HOST ""
 #define FIREBASE_AUTH ""
@@ -111,6 +111,8 @@ void setup() {
     while (true);                       // if failed, do nothing
   }
 
+#ifdef ENABLE_FIREBASE_WIFI
+
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   Serial.print("connecting");
   while (WiFi.status() != WL_CONNECTED) {
@@ -121,10 +123,12 @@ void setup() {
   Serial.println();
   Serial.print("connected: ");
   Serial.println(WiFi.localIP());
-
+  
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 
   Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
+  
+#endif
 
   Serial.println("LoRa init succeeded.");
   Serial.println();
@@ -164,9 +168,9 @@ void loop() {
 //    packet_sent.lon = u.fval[1];
 //
     Serial.print("latitude: ");
-    Serial.println(packet_sent.t.fval[0]);
+    Serial.println(packet_sent.t.fval[0],6);
     Serial.print("longtitude: ");
-    Serial.println(packet_sent.t.fval[1]);
+    Serial.println(packet_sent.t.fval[1],6);
     Serial.print("battery: ");
     Serial.println(packet_sent.b.fval);
 
@@ -176,8 +180,11 @@ void loop() {
       root["longtitude"] = packet_sent.t.fval[1];
       root["battery"] = packet_sent.b.fval;
       root["timestamp"] = getTime();
-
+      
+#ifdef ENABLE_FIREBASE_WIFI
       Firebase.push("Pet-Traking/01", root);
+#endif
+
     }
   }
 }
