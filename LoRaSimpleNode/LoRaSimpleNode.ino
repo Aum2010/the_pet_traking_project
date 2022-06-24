@@ -73,8 +73,8 @@ CRC8 crc;
 
 typedef struct {
   uint8_t id;
-  float lat;
-  float lon;
+  double lat;
+  double lon;
   float batt;
   uint8_t crc8;
 }__attribute__ ((packed)) PACKET_T;
