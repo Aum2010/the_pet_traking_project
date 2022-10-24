@@ -41,8 +41,8 @@ const int   daylightOffset_sec = 7 * 3600;
 
 #define FIREBASE_HOST ""
 #define FIREBASE_AUTH ""
-#define WIFI_SSID "3bb"
-#define WIFI_PASSWORD "0844025188"
+#define WIFI_SSID ""
+#define WIFI_PASSWORD ""
 
 #define GPS_RX_PIN                  34
 #define GPS_TX_PIN                  12
@@ -68,6 +68,8 @@ const int   daylightOffset_sec = 7 * 3600;
 #define GPS_BAUD_RATE               9600
 #define HAS_GPS
 #define HAS_DISPLAY                 //Optional, bring your own board, no OLED !!
+
+#define DISABLE_TRANSMIT_TO_NODE 
 
 
 const long frequency = 923E6;  // LoRa Frequency
@@ -144,8 +146,11 @@ void setup() {
 }
 
 void loop() {
-  if (runEvery(5000)) { // repeat every 5000 millis
+  
+#if defined ( DISABLE_TRANSMIT_TO_NODE )
 
+#else
+  if (runEvery(5000)) { // repeat every 5000 millis
     String message = "HeLoRa World! ";
     message += "I'm a Gateway! ";
     message += millis();
@@ -154,6 +159,7 @@ void loop() {
 
     Serial.println("Send Message!");
   }
+#endif
 
   if( isReceive ) 
   {
@@ -182,7 +188,9 @@ void loop() {
       root["timestamp"] = getTime();
       
 #ifdef ENABLE_FIREBASE_WIFI
-      Firebase.push("Pet-Traking/01", root);
+      if ( (packet_sent.id) )
+          Firebase.push("Pet-Traking/0"+ String(packet_sent.id) , root);   
+      //Firebase.push("Pet-Traking/01", root);
 #endif
 
     }

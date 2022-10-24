@@ -57,6 +57,9 @@
 #define HAS_DISPLAY                 //Optional, bring your own board, no OLED !!
 
 #define ID_NODE  1
+#define TIME_INTRAVEL  10000
+
+#define DISABLE_RECEIVE
 
 const long frequency = 923E6;  // LoRa Frequency
 
@@ -108,9 +111,14 @@ void setup() {
   Serial.println("Rx: invertIQ enable");
   Serial.println();
 
-  LoRa.setSpreadingFactor(8);
+  LoRa.setSpreadingFactor(7);
 
+#if defined ( DISABLE_RECEIVE )
+  
+#else
   LoRa.onReceive(onReceive);
+#endif
+
   LoRa.onTxDone(onTxDone);
   LoRa_rxMode();
 
@@ -118,7 +126,7 @@ void setup() {
 }
 
 void loop() {
-  if (runEvery(5000)) { // repeat every 1000 millis
+  if (runEvery(TIME_INTRAVEL)) { // repeat every 1000 millis
 
     String message = "HeLoRa World! ";
     message += "I'm a Node! ";
